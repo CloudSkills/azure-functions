@@ -35,7 +35,7 @@ Optionally, you can enable Application Insights on the Function App to provide m
 
 Let's get stuck in and create your first function app. Log in to the [Azure Portal](https://portal.azure.com/) and search for **Function App** and then click **Create Function App**.
 
-![Step1-1-Create-Function-App](images/Step1-1-Create-Function-App.png)
+![Step1-1-Create-Function-App](images/step1-1-create-function-app.png)
 
 Fill out the basic information for the function app and then click on **Next: Hosting**:
 - **Subscription**: Select the Azure subscription that you will deploy this function to.
@@ -46,7 +46,7 @@ Fill out the basic information for the function app and then click on **Next: Ho
 - **Version**: Depending on the language you select, there may be different versions available to use in the runtime. At the time of writing, version 6 is the only one available for PowerShell
 - **Region**: Select the Azure region where your function app will be hosted
 
-![Step1-2-Basic-App-Settings](images/Step1-2-Basic-App-Settings.png)
+![Step1-2-Basic-App-Settings](images/step1-2-basic-app-settings.png)
 
 On the next page we get some options for the hosting of the app function. Select your desired options and then click **Next: Monitoring**
 
