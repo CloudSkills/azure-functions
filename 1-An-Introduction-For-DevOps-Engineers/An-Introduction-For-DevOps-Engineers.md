@@ -54,7 +54,7 @@ On the next page we get some options for the hosting of the app function. Select
 - **Operating System**: Depending on your chosen runtime you can select the underlying Operating System that your functions will run on. We're using Windows as it is the only option for PowerShell
 - **Plan Type**: As we covered in the introduction, this is where you select the plan for the function app. This can't be changed later. For this demo we're using the consumption plan.
 
-![Step1-3-Hosting-App-Settings](images/Step1-3-Hosting-App-Settings.png)
+![Step1-3-Hosting-App-Settings](images/step1-3-hosting-app-settings.png)
 
 You can optionally enable Application Insights and add tags to the resources being provisioned. We aren't looking at App Insights in this demo, so we've chosen not to enable it. Disable Application insights then click on **Review + Create**. Go ahead and review your selections and click **Create** to provision the resources.
 
