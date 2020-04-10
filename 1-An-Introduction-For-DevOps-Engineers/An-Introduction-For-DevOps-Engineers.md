@@ -101,7 +101,7 @@ On the right-hand side of the screen, click on the arrow to expand a pane where 
 Each function contains two important files that you need to be familiar with that you can see in the panel on the right hand side. You can click on each file to view it in the editor:
 
 - **Run.ps1**. This is the PowerShell function that is currently open in the portal editor. This is the code that gets run when your function is triggered.
-- **function.json**. This is a configuration file that defines the behavior of the function, such as how it gets triggered, what authorization is required and so forth.
+- **function.json**. This is a configuration file that defines the behavior of the function, such as how it gets triggered, what authorization is required and what input and output bindings are defined. Pay attention to lines 13 through 17 in particular, this defines a http based out binding that is called `Response` and you will come back to this in a few moments when we break down the PowerShell function.
 
 ![step3-2-function-files](images/step3-2-function-files.png)
 
@@ -156,7 +156,7 @@ else {
 }
 ```
 
-The final part of the function is to call `Push-OutputBinding` and provide the values back to the caller of the function, now that their data has been processed:
+The final part of the function is to call `Push-OutputBinding` and provide the value to an output so it can be processed. For this example, the output being used is a HTTP output. For the Name parameter in this example, the value `Response` is being used. Remember a few moments ago where you looked at `function.json` and a HTTP binding with an out direction was defined and named `response`? That is what is being called now and the data in the `-Value` parameter will be sent and processed by the output binding. You can create different types out output bindings and that will be explored further in the next post in this series.
 
 ```PowerShell
 # Associate values to output bindings by calling 'Push-OutputBinding'.
