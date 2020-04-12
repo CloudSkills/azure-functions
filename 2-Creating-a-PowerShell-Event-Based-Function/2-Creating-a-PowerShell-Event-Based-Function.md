@@ -19,6 +19,7 @@ When you're finished, you'll have a good understanding of how event-driven data 
 
 Before you begin this guide you'll need the following:
 
+- (optional) Familiarity with PowerShell would be beneficial
 - An [Azure Subscription](https://azure.microsoft.com/en-us/), you can create a free account if you don't have an existing subscription
 - An Azure function app to create a new function in. If you have the function app from post one in this series, you can use that.
 - A Storage account where blobs will be uploaded to be the event grid trigger. In this demo I created a separate resource group and storage account for this by running the following PowerShell commands from [Azure Cloud Shell](https://shell.azure.com):

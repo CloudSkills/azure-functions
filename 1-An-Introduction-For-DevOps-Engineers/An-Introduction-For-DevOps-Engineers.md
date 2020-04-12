@@ -12,6 +12,7 @@ In this first part of a multi-part guide, you will review Azure Function App pla
 Before you begin this guide you'll need the following:
 
 - An [Azure Subscription](https://azure.microsoft.com/en-us/), you can create a free account if you don't have an existing subscription
+- (optional) Familiarity with PowerShell would be beneficial
 
 ## Understanding Function App Plans
 

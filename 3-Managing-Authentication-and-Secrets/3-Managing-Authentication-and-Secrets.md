@@ -14,6 +14,7 @@ When you're finished, you'll be able to securely provide Azure functions with ro
 
 Before you begin this guide you'll need the following:
 
+- (optional) Familiarity with PowerShell would be beneficial
 - An [Azure Subscription](https://azure.microsoft.com/en-us/), you can create a free account if you don't have an existing subscription
 - An Azure function app to integrate with Azure and create a new function in. If you have the function app from post one in this series, you can use that. This post follows on from post two in this series and will be using the same function app `cloudskills20200406`
 
