@@ -1,4 +1,3 @@
-
 # Azure Functions: An Introduction for DevOps Engineers
 
 ### Introduction
@@ -7,12 +6,14 @@ Azure Functions is a serverless compute service provided by Microsoft, enabling 
 
 In this first part of a multi-part guide, you will review Azure Function App plans and deploy an Azure Function App. Next you will examine the high-level components of the Function App, deploy a PowerShell based function and review the logic of a templated PowerShell webhook function. Afterwards, you will trigger the function using several different methods and observe the output and log stream. When you're finished you will have a PowerShell based Azure Function that you can modify to accept different types of input and perform actions when the function is triggered and have a fundamental understanding of what capability Azure Functions can provide.
 
+By the end of the series, you will have deployed functions based on different triggers, worked with output bindings to send processed data to other applications, understood how authentication and secrets management works, developed, tested and deployed functions in Visual Studio Code and finally, put the function code under management of git and built a CI/CD pipeline in Azure DevOps to deploy your function when new code is commited to a master branch.
+
 ## Prerequisites
 
 Before you begin this guide you'll need the following:
 
-- An [Azure Subscription](https://azure.microsoft.com/en-us/), you can create a free account if you don't have an existing subscription
 - (optional) Familiarity with PowerShell would be beneficial
+- An [Azure Subscription](https://azure.microsoft.com/en-us/), you can create a free account if you don't have an existing subscription
 
 ## Understanding Function App Plans
 
@@ -235,4 +236,4 @@ You deployed a new Function App in Azure and created a new function based on a w
 
 Finally, you triggered the function using several methods that provided varying results and observed the output both in the Azure Portal and in the Log Stream.
 
-In the next post in this series, you will review PowerShell based functions in detail, creating examples where the function will perform actions on Azure resources based on particular logic and output the results to a binding other than HTTP.
+In the next post in this series, you work with PowerShell based functions in more detail, creating examples where the function will perform actions on Azure resources based on particular logic and output the results using a binding other than HTTP.

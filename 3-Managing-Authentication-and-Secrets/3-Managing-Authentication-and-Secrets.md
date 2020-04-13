@@ -1,4 +1,4 @@
-# Managing Authentication and Secrets
+# Azure Functions: Managing Authentication and Secrets
 
 ### Introduction
 
@@ -16,13 +16,13 @@ Before you begin this guide you'll need the following:
 
 - (optional) Familiarity with PowerShell would be beneficial
 - An [Azure Subscription](https://azure.microsoft.com/en-us/), you can create a free account if you don't have an existing subscription
-- An Azure function app to integrate with Azure and create a new function in. If you have the function app from post one in this series, you can use that. This post follows on from post two in this series and will be using the same function app `cloudskills20200406`
+- An Azure function app based on PowerShell to integrate with Azure and create a new function in. If you have the function app from post one in this series, you can use that. This post follows on from post two in this series and will be using the same function app `cloudskills20200406`
 
 ## Step 1 — Configuring a Managed Identity and Role Based Access Control
 
 There will be times in your functions that you want to read, modify and maybe even delete resources within your Azure subscriptions. By default, the functions you create do not have permission to manage any of your Azure resources, whether that be in the same or separate subscriptions. By configuring a managed identity and setting role-based access control, the function app (and therefore all functions within the function app) will have the permission to manipulate resources that you provided the managed identity access to.
 
-First, log in to the [Azure Portal](https://portal.azure.com/) and search for **Function App**. Our function app is called `cloudskills20200406`, so click on that. Yours will be called something different.
+First, log in to the [Azure Portal](https://portal.azure.com/), search for **Function App** and click on your function app. Our function app is called `cloudskills20200406`, yours will be called something different.
 
 ![step1-1-open-function-app](images/step1-1-open-function-app.png)
 
@@ -38,19 +38,19 @@ After a few moments the Object ID for the managed identity will be shown on this
 
 ![step1-4-copy-managed-identity-id](images/step1-4-copy-managed-identity-id.png)
 
-You now need to assign a role for the newly created managed identity. In this example the managed identity is being assigned the contributor role on the subscription. You may want to scope this further depending on your requirements, such as targetting a resource group rather than an entire subscription. To find your subscription ID, use `Get-AzSubscription`. Open up [Cloud Shell](https://shell.azure.com/) and run the following command:
+You now need to assign a role for the newly created managed identity. In this example the managed identity is being assigned the contributor role on the subscription. You may want to scope this further depending on your requirements, such as targetting a resource group rather than an entire subscription. To find your subscription ID, use `Get-AzSubscription`. Open up [Cloud Shell](https://shell.azure.com/) and run the following command to provide the managed identity object the contributor role on an Azure subscription:
 
 ```powershell
 New-AzRoleAssignment -ObjectId 8aebb402-14ab-4ce7-b5c9-b4122384ffa7 -RoleDefinitionName Contributor -Scope /subscriptions/b0d214f3-4b5b-45f6-a841-db43c23acbba/
 ```
 
-In this step you configured the function app to use the managed identity and created a new role assignment in Azure to provide the managed identity with access to resources. You now can objects in Azure from within your functions.
+In this step you configured the function app to use the managed identity and created a new role assignment in Azure to provide the managed identity with access to resources. You now can manage objects in Azure from within your functions.
 
 ## Step 2 — Creating a Cost Center Function
 
 In an earlier blog post in this series you created an event grid function, which was triggered following a particular event, processed some data then wrote the processed data out to a table in Azure Storage.
 
-In this step you will create another event grid function, but instead of writing out to another application or service, the function will leverage the newly assigned role from the previous step to modify an Azure resource directly. The function will look for when a new resource group is created, and based on the value of a tag named `Env`, will then add another tag to the resource group named `CostCenter` with an appropriate value, either `0001` if the Env tag is Development, or `0002` if the Env tag is Production.
+In this step you will create another event grid function, but instead of writing out to another application or service, the function will leverage access from the newly assigned role in the previous step to modify an Azure resource directly. The function will look for when a new resource group is created, and based on the value of a tag named `Env`, will then add another tag to the resource group named `CostCenter` with an appropriate value, either `0001` if the Env tag is Development, or `0002` if the Env tag is Production.
 
 This paragraph is going to be high-level steps as you went through this in the previous post in this series. If you haven't read that post, please refer to it for the detailed walk-through steps. In the Azure Portal, open your function app and create a new function based on an Azure Event Grid Trigger. Add an event grid subscription with the following settings:
 
@@ -100,7 +100,7 @@ Notice in this code the PowerShell Az cmdlets are being leveraged to Get and Set
 
 What this means is that the Az PowerShell modules are loaded with the function and are available for use.
 
-Finally, go ahead and create a test empty resource group so the new function is triggered. Make sure during creation you assign a tag with a Name of `Env` and the value is either `Development` or `Production`. You can use the PowerShell example below to create a resource group.
+Finally, go ahead and create a test empty resource group so the new function is triggered. Make sure during creation you assign a tag with a Name of `Env` and the value is either `Development` or `Production`. You can use the PowerShell example below to create a resource group with an appropriate tag:
 
 ```powershell
 New-AzResourceGroup -Name costcenter-rg01 -Location 'West US' -Tag @{Env="Development"}
@@ -112,13 +112,15 @@ After a few moments, if you watch the log stream you will notice the function is
 
 ![step2-3-resource-group-tags](images/step2-3-resource-group-tags.png)
 
-This capability provides you with effectively an unlimited range of options on configuring role-based access control to your Azure resources to then manage and maintain them using Azure Functions. In the last section of this post, you will learn how to access secrets stored in Azure Key Vault such as password and API keys securely from your function.
+This capability provides you with effectively an unlimited range of options on configuring role-based access control to your Azure resources to then manage and maintain them using Azure Functions. In the final step of this post, you will learn how to access secrets stored in Azure Key Vault such as passwords and API keys securely from your function.
 
 ## Step 3 — Accessing Secrets from Azure Key Vault
 
 Occasionally you will want your function to connect to an endpoint that it is not authorized to by default. This could be an Azure resource, such as the guest operating system of a virtual machine, or it could be an external service such as an alerting system. Hopefully it goes without saying, but just in case, it is not a good idea to save these secrets in the `run.ps1` file in clear text. Historically, the method was to create a new "application setting" within the function app which has a name and a value. The application settings can be called from the PowerShell function by using an environment variable such as `$env:AppSettingName`. Application settings are encrypted at rest and are transmitted over an encrypted channel, but they can still be exposed in plain text and there are no advanced secrets management capabilities such as versioning or auditing.
 
-In late 2018 Microsoft announced support for accessing Azure Key Vault secrets from a function app. The good news (for backward compatibility) is that it still uses the function application setting, instead of putting the secret itself in the value, you enter a reference to the Azure Key Vault secret. In this step you will add an application setting and store the value directly in the application setting. Next, you will create a new Azure Key Vault, provide the managed identity we created in Step 2 access to the Key Vault, create a new secret within the Key Vault and finally, update the value of the application setting to reference the Key Vault Secret instead of storing the value directly.
+In late 2018 Microsoft announced support for accessing Azure Key Vault secrets from a function app. The good news (for backward compatibility) is that it still uses the function application setting, instead of putting the secret itself in the value, you enter a reference to the Azure Key Vault secret.
+
+In this step you will add an application setting and store the value directly in the application setting. Next, you will create a new Azure Key Vault, provide the managed identity we created in Step 2 access to the Key Vault, create a new secret within the Key Vault and finally, update the value of the application setting to reference the Key Vault Secret instead of storing the value directly.
 
 First, select your function app in the Azure Portal, click on **Platform features** and then click on **Configuration**.
 
@@ -136,7 +138,7 @@ Next, you will create an Azure Key Vault. The examples below are done in PowerSh
 New-AzKeyVault -Name CSFunctionVault -ResourceGroupName functiondemo -location "Australia East"
 ```
 
-Followed by providing the managed identity of the function app (the ObjectID being used below is the same one we used in step 1) access to get secrets from the new vault, as well as providing your account access to get and set secrets. Just make sure to update the value of `-UserPrincipalName` in the text below:
+By default the Key Vault doesn't have an access policy assigned, so no users or accounts can access the vault. Here, you will provide the managed identity of the function app (the ObjectID being used below is the same one we used in step 1) access to get secrets from the new vault, as well as providing your account access to get and set secrets. Just make sure to update the value of `ObjectId` and `-UserPrincipalName` in the text below:
 
 ```powershell
 Set-AzKeyVaultAccessPolicy -VaultName CSFunctionVault -ObjectId 4f14fcc6-b345-4f8c-9589-5d21edd0772c -PermissionsToSecrets get -PassThru
@@ -172,4 +174,4 @@ In this article you configured a managed identity on a function app and configur
 
 Finally you reviewed the application settings within a function app to understand how environmental values are stored and called. Though these are encrypted at rest and in flight, they lack some core secrets management capabilities, so you enhanced this functionality by creating an Azure Key Vault Secret in a new Key Vault and referenced the secret from the function app application settings.
 
-Next up in this series you will look at developing and running functions locally in Visual Studio Code, followed by deploying the function to Azure directly from Visual Studio Code.
+Next up in this series you will look at developing and running functions locally in Visual Studio Code, followed by deploying the function to Azure directly from Visual Studio Code. Finally you will create a new Azure function app that integrates with a git repo in Azure DevOps and uses a CI/CD pipeline to deploy updates to the function app.

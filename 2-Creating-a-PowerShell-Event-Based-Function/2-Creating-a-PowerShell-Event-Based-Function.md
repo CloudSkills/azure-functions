@@ -6,9 +6,9 @@ In the first post in this series, you created a basic Azure Function based on a 
 
 In this guide you will create a new function that will integrate with Azure Event Grid, resulting in the function being triggered when a particular event takes place. You will analyze the data being sent to the function by event grid to understand what you are working with.
 
-You'll also set up an Azure Storage account to use as an output binding from the function. When the function is triggered, you will use some basic logic to get some data from the triggered event and insert that into a new row within table storage in the destination storage account.
+You'll also set up an Azure Storage account to use as an output binding from the function. When the function is triggered, you will use logic to get data from the triggered event and insert that into a new row within Azure table storage in the destination storage account.
 
-The goal in this guide is to trigger a function when a file is uploaded to blob storage in a specific storage account. If the file is a CSV file, the function will collect some data from the incoming event data, specifically, the file name of the CSV that was uploaded and using an output, will insert a new row into an Azure Storage Table.
+The goal in this guide is to trigger a function when a file is uploaded to blob storage in a specific storage account. If the file is a CSV file, the function will collect some data from the incoming event data, specifically, the file name of the CSV that was uploaded and using an output binding, will insert a new row into an Azure Storage Table with some data from the event.
 
 ![overview](images/introduction.png)
 
@@ -21,7 +21,7 @@ Before you begin this guide you'll need the following:
 
 - (optional) Familiarity with PowerShell would be beneficial
 - An [Azure Subscription](https://azure.microsoft.com/en-us/), you can create a free account if you don't have an existing subscription
-- An Azure function app to create a new function in. If you have the function app from post one in this series, you can use that.
+- An Azure function app based on PowerShell to create a new function in. If you have the function app from post one in this series, you can use that.
 - A Storage account where blobs will be uploaded to be the event grid trigger. In this demo I created a separate resource group and storage account for this by running the following PowerShell commands from [Azure Cloud Shell](https://shell.azure.com):
 ```powershell
 New-AzResourceGroup -Name BlobStorage -Location "Southeast Asia"
@@ -65,7 +65,7 @@ You've created a new PowerShell function and configured an Event Grid subscripti
 
 ## Step 2 — Reviewing Event Grid Data Sent to the Function
 
-Now that you have an event grid subscription created, you need to understand what data and properties are being sent to the function by event grid. Without this information available, it will be hard to write the logic into your function.
+Now that you have an event grid subscription created, you need to understand what data and properties are being sent to the function by event grid. Without this information, it will be difficult to maniuplate the data and write logic into your function.
 
 In the template that was created for us, the `$eventGridEvent` variable is being output to the host, so if we trigger the function we can see the data in the Logs console. An alternative method is to convert the object to JSON and then output that, giving us the full data structure to copy into a text editor to view the data structure and properties.
 
@@ -78,11 +78,11 @@ $eventGridEvent | ConvertTo-Json | Write-Output
 ![step2-1-modify-eventgrid-output](images/step2-1-modify-eventgrid-output.png)
 
 
-Click on Logs at the bottom to reveal the log-streaming service. Click on Expand to make the window larger. You will come back to this window in a moment to review the output. Next, you will perform an event that causes the function to trigger and review the event data.
+Click on **Logs** at the bottom to reveal the log-streaming service. Click on Expand to make the window larger. You will come back to this window in a moment to review the output.
 
 ![step2-2-open-log-streaming](images/step2-2-open-log-streaming.png)
 
-Open another browser tab or window with the Azure Portal open and navigate to the storage account that was created in the prerequisites section of this guide. After clicking on the storage account, use the search feature in the properties pane and search for **Containers**.
+Next, you will perform an event that causes the function to trigger and review the event data. Open another browser tab or window with the Azure Portal open and navigate to the storage account that was created in the prerequisites section of this guide. After clicking on the storage account, use the search feature in the properties pane and search for **Containers**.
 
 ![step2-3-open-blob-storage](images/step2-3-open-blob-storage.png)
 
@@ -94,7 +94,7 @@ Click on the newly created container and then click upload to upload a small tes
 
 ![step2-5-upload-test-file](images/step2-5-upload-test-file.png)
 
-Switch back to the window or tab where we left the log streaming running within the function. After a few moments you will see the function has executed. In the log-stream output you will see a JSON body showing the properties and data sent to the function by the Event Grid service, as shown in the image below (the highlighted text is the JSON data). You can copy this data to a text editor to observe as you build out the logic of your function. For example, there is a property in this JSON body named `subject`. To reference or use that in the function itself, you can use now use `$eventGridEvent.subject`.
+Switch back to the window or tab where we left the log streaming running within the function. After a few moments you will see the function has executed. In the log-stream output you will see a JSON body showing the properties and data sent to the function by the Event Grid service, as shown in the image below (the highlighted text is the JSON data). You can copy this data to a text editor to observe as you build out the logic of your function. For example, there is a property in this JSON output named `subject`. To reference or use that in the function itself, you can use now use `$eventGridEvent.subject`.
 
 ![step2-6-observe-function-log-stream](images/step2-6-observe-function-log-stream.png)
 
@@ -102,9 +102,9 @@ When you are finished, close the log streaming console (or collapse it) so we ca
 
 ## Step 3 — Configuring an Azure Table Storage Output
 
-Another introduction
+When you come up with an idea for a function to solve a problem or add value, the function itself often won't be the end of the line. You will find requirements for your function needing to send data to another application or system, whether that be for logging purposes, triggering another downstream process, creating an alert, and so on. Azure functions have a concept called output bindings, which are preconfigured connectors provided to you so you don't need to code the connection in manually from your function. In this step, you will create and leverage an output binding to write data from the function in to a row in Azure Table Storage.
 
-First, you need to create the output binding for the function. In this example, you are going to output the result to a new Table named `FunctionOutput` hosted in the storage account that is already being used by the function app. This is just to save creating another storage account, as we already have one we can use.
+First, you need to create the output binding for the function. In this example, you are going to output the result to a new Table named `FunctionOutput` hosted in the same storage account that is already being used by the function app. You probably wouldn't *normally* do this, it is just to save creating another storage account as we already have one we can use.
 
 In the left-hand side panel under your function, click on **integrate**. Under Outputs, click on **+ New Output**, select **Azure Table Storage** and click **Select**.
 
@@ -115,7 +115,6 @@ Change the **Table Name** to `FunctionOutput`. Notice the parameter name is set 
 ![step3-2-configure-storage-output](images/step3-2-configure-storage-output.png)
 
 In the left-hand side panel, click on your function name to be returned to the `run.ps1` script where we will bring everything together with some PowerShell logic to pull some properties from an incoming event grid trigger and output them to Azure Table Storage.
-
 
 ## Step 4 - Putting Logic in the PowerShell Function
 
@@ -190,17 +189,17 @@ if ($Filename -like "*.csv") {
 
 ## Step 5 - Triggering the Function and Reviewing Output
 
-Using Azure Portal, go to the storage account you created in the prerequisites section of this guide. You should still have this open in another browser window/tab from Step 2. It should have a container and a test file already from step 2. Upload another document by clicking **Upload**, select a CSV file from your computer and then click ***Upload** again.
+Using Azure Portal, go to the storage account you created in the prerequisites section of this guide. You should still have this open in another browser window/tab from Step 2. It will have a container and a test file already from step 2. Upload another document by clicking **Upload**, select a CSV file from your computer and then click **Upload** again.
 
 Optionally, navigate back to the log stream console of the function to monitor the function being triggered.
 
 ![step5-1-review-log-stream-output](images/step5-1-review-log-stream-output.png)
 
-If you have Azure Storage Explorer installed, you can use that to connect to the storage account that is being used by the function app and look at the table storage. There should be a new table named `functionOutput` with a row of data.
+If you have Azure Storage Explorer installed, you can use that to connect to the storage account that is being used by the function app and look at the table storage. There should be a new table named `functionOutput` with a row of data that was inserted by the output binding.
 
 ![step5-2-review-table-storage-explorer](images/step5-2-review-table-storage-explorer.png)
 
-Not everyone may have Azure Storage Explorer installed and configured and it is OK if you don't. In this next step you will use PowerShell in the Azure Cloud Shell to review the output data.
+Not everyone may have Azure Storage Explorer installed and configured and it is OK if you don't, though it is a great utility to have. In this next step you will use PowerShell in the Azure Cloud Shell to review the output data.
 
 Open a new Cloud Shell, either by clicking on the cloud shell icon in Azure Portal, or in a new browser window or tab navigate to https://shell.azure.com. If you still have the tab open from a previous step, you can use that but you may need to reconnect your session. You can use the code below to look at the data in table storage of the same Azure Storage Account that is being used by your function app. Just be sure to change the name of the resource group hosting your function app specified in `$ResourceGroup` below.
 
