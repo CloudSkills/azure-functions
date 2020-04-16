@@ -6,7 +6,7 @@ Throughout this blog series on Azure Functions, you've performed all tasks with 
 
 In this guide, you will configure your machine to enable you to create, develop, debug and deploy Azure function apps and functions directly from your machine without touching Azure Portal once. You will add a third party PowerShell Module from the PowerShell gallery as a requirement of the function app and observe this being loaded when the function is triggered.
 
-When you're finished, you'll be able to create, configure and test Azure functions locally on your machine and then deploy them into an Azure function app using multiple methods. You'll also have a fundamental understanding of some of the other files that encompass a function app that you have not been exposed to in this blog series to date.
+When you're finished, you'll be able to create, configure and test Azure functions locally on your machine and then deploy them into an existing Azure function app using multiple methods. You'll also have a fundamental understanding of some of the other files that encompass a function app that you have not been exposed to in this blog series to date.
 
 ## Prerequisites
 
@@ -163,6 +163,12 @@ The final step in this series is a big one but an exciting one, taking you throu
 
 ## Step 5 — Continuous Integration and Continuous Deployment
 
+So far in this post, the code for the function you created is sitting locally on your machine and was deployed to an Azure function app via VS Code. If you are working within real environment and especially if you are on a team, you will likely want to use a source control tool, such as git, to manage the code. When the code is stored in a git repository, you can deploy your code continuously by using source control integration. This enables a workflow in which code is commited or pushed to the master branch, it triggers the deployment of the updated code to the Azure Function App.
+
+You *can* go as far as having the entire environment configured as code including in function app itself, for example inside of an Azure Resource Manager Template, and then configure the build and release pipeline to deploy the new infrastructure and then deploy the function code. If you'd like to see this, please reach out to me and let me know so I can consider a follow up post.
+
+In this step, you will create a new function app manually in Azure Portal and configure it to integrate with source control as it is important to see how it all ties together.
+
 First, browse to dev.azure.com and log in to your Azure DevOps Organisation. Click **+ New Project** to create a new project. Ours is called `cloudskillsfunctionapp`. Leave the repo as private and click **Create**.
 
 ![step5-1-new-devops-project](images/step5-1-new-devops-project.png)
@@ -216,11 +222,19 @@ Use the drop-down menus to select the Azure DevOps organization, project, reposi
 
 ![step5-8-functionapp-code-deployment](images/step5-8-functionapp-code-deployment.png)
 
-Review the configuration and click Finish to start the build and release process. Behind the scenes this will go and configure a build and release pipeline inside of the Azure DevOps project and perform an initial build and release, taking the code you pushed to the repo and deploying the function app. You can see the integration with Azure DevOps directly from the function app in the Azure Portal, including visibility into deployments with links directly to the build and release items in the Azure DevOps portal.
+Review the configuration and click Finish to start the build and release process. Behind the scenes this will go and configure a build and release pipeline inside of the Azure DevOps project and perform an initial build and release, taking the code you pushed to the repo and deploying it to the function app.
+
+The pipelines that are created by default are pretty straight forward. In summary:
+- The build pipeline:
+    - Archives the files from your git repository in to a ZIP file and publishes the ZIP as an artifact to the release pipeline
+- The release pipeline:
+    - Uses an **Azure Function App Deploy** task to deploy the code published from the build pipeline in to the existing function app
+
+You can see the integration with Azure DevOps directly from the function app in the Azure Portal, including visibility into deployments with links directly to the build and release items in the Azure DevOps portal.
 
 ![step5-9-functionapp-code-deployment](images/step5-9-functionapp-code-deployment.png)
 
-You can now manage and maintain the source code for your functions in git to realize source control benefits and experience the full power of continuous integration and continuous development. When new commits are pushed to the master branch of the Azure DevOps repository, DevOps will trigger a build and release and update the function app without you needing to do anything.
+You can now manage and maintain the source code for your functions in git to realize source control benefits and experience the full power of continuous integration and continuous development. When new commits are pushed to the master branch of the Azure DevOps repository, DevOps will trigger a build and release and update the function app code without you needing to do anything.
 
 ## Conclusion
 
@@ -228,4 +242,4 @@ In this article you used Visual Studio Code and the Azure Functions Core Tools t
 
 Next you used VS Code's Azure functions extention to deploy the function from the local development environment directly in to Azure, creating a new function app in the process. You then added a PowerShell module from the PowerShell Gallery as a requirement to the function app and redeployed the function app, afterward triggering the function and reviewing the PowerShell module get loaded.
 
-Finally, you brought everything together and placed the function app code in a git repository. You then pushed the git repository to an Azure DevOps repository and created a final new function app that was configured to integrate directly with the Azure DevOps Repo. Lastly, you configured a CI/CD process and observed the function get deployed automatically from the DevOps git repo in to the Azure Function app.
+Finally, you brought everything together and placed the function app code in a git repository. You then pushed the git repository to an Azure DevOps repository and created a final new function app that was configured to integrate directly with the Azure DevOps Repo. Lastly, you configured a CI/CD process and observed the function get deployed automatically from the DevOps git repo to the Azure Function app.
